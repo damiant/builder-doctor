@@ -1,0 +1,74 @@
+#!/usr/bin/env node
+
+import { check, get } from "./utils";
+
+const args = process.argv.slice(2);
+const verbose = args.includes("--verbose");
+
+async function main() {
+  try {
+    console.log(`Checking connectivity to Builder.io services...`);
+
+    await check({
+      host: "firestore.googleapis.com",
+      url: "https://firestore.googleapis.com/",
+      verbose,
+      expectedStatus: 404,
+      expectedContent: "<span id=logo aria-label=Google>",
+    });
+
+    await check({
+      host: "firebasestorage.googleapis.com",
+      url: "https://firebasestorage.googleapis.com/",
+      verbose,
+      expectedStatus: 404,
+      expectedContent: "<span id=logo aria-label=Google>",
+    });
+
+    await check({
+      host: "builder.io",
+      url: "https://www.builder.io/",
+      verbose,
+      expectedStatus: 200,
+      expectedContent: "<body>",
+    });
+
+    await check({
+      host: "builder.io app",
+      url: "https://builder.io/content",
+      verbose,
+      expectedStatus: 200,
+      expectedContent: "<body>",
+    });
+
+    await check({
+      host: "*.builder.codes",
+      url: "https://stuff.builder.codes/",
+      verbose,
+      expectedStatus: 404,
+      expectedHeader: "server",
+      expectedHeaderValue: "Google Frontend",
+    });
+
+    await check({
+      host: "*.builder.my",
+      url: "https://www.builder.my/",
+      verbose,
+      expectedStatus: 200,
+      expectedHeader: "x-powered-by",
+      expectedHeaderValue: "Next.js",
+    });
+
+    await check({
+      host: "*.fly.dev",
+      url: "https://status.flyio.net/",
+      verbose,
+      expectedStatus: 200,
+      message: ' (Unknown status)'
+    });
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+}
+
+main();
