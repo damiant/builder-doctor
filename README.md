@@ -14,39 +14,7 @@ Or run directly with npx:
 npx builder-doctor
 ```
 
-## Development
-
-Install dependencies:
-
+or for additional details (like responses and headers):
 ```bash
-npm install
-```
-
-Build the project:
-
-```bash
-npm run build
-```
-
-Test locally:
-
-```bash
-node dist/index.js
-```
-
-## Publishing to npm
-
-1. Make sure you're logged in to npm:
-   ```bash
-   npm login
-   ```
-
-2. Publish the package:
-   ```bash
-   npm publish
-   ```
-
-After publishing, users can run:
-```bash
-npx builder-doctor
+npx builder-doctor --verbose
 ```
