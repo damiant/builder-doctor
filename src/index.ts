@@ -42,6 +42,15 @@ async function main() {
     });
 
     await check({
+      host: "cdn.builder.io",
+      url: "https://cdn.builder.io/static/media/builder-logo.bff0faae.png",
+      verbose,
+      expectedStatus: 200,
+      expectedHeader: "content-type",
+      expectedHeaderValue: "image/png",
+    });
+
+    await check({
       host: "*.builder.codes",
       url: "https://stuff.builder.codes/",
       verbose,
@@ -64,7 +73,7 @@ async function main() {
       url: "https://status.flyio.net/",
       verbose,
       expectedStatus: 200,
-      message: ' (Unknown status)'
+      message: " (Unknown status)",
     });
   } catch (error) {
     console.error("An error occurred:", error);

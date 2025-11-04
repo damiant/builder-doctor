@@ -1,6 +1,6 @@
 {
   "name": "builder-doctor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A CLI tool for Builder.io diagnostics",
   "main": "dist/index.js",
   "bin": {
