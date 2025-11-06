@@ -75,6 +75,15 @@ async function main() {
       expectedStatus: 200,
       message: " (Unknown status)",
     });
+
+    await check({
+      host: "34.136.119.149",
+      verbose,
+      message: " (ping)",
+      additionalErrorInfo: "This is the Static IP address that Builder.io uses",
+      ping: true,
+    });
+    
   } catch (error) {
     console.error("An error occurred:", error);
   }
