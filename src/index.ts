@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { check, get } from "./utils";
+import { checkRules } from "./rules";
+import { check } from "./network";
 
 const args = process.argv.slice(2);
 const verbose = args.includes("--verbose");
@@ -89,6 +90,10 @@ async function main() {
       message: " (ping)",
       additionalErrorInfo: "This is the Static IP address that Builder.io uses",
       ping: true,
+    });
+
+    await checkRules({
+      verbose,
     });
   } catch (error) {
     console.error("An error occurred:", error);
