@@ -18,16 +18,17 @@ interface RulesResult {
 }
 
 export async function checkRules(options: RulesOptions): Promise<void> {
-  const rulesResult: RulesResult = {
+  const result: RulesResult = {
     hasAgentsMd: hasAgentsMd(),
     hasBuilderRulesFile: hasBuilderRulesFile(),
     rules: await getRuleFiles(),
     rootRuleFile: getRootRuleFile(),
   };
   if (options.verbose) {
-    console.log("Rules Check Result:", JSON.stringify(rulesResult, null, 2));
+    console.log("Rules Check Result:", JSON.stringify(result, null, 2));
   }
-  commentOn(rulesResult);
+  commentOn(result);
+  
 }
 
 function commentOn(result: RulesResult): void {
@@ -47,6 +48,13 @@ function commentOn(result: RulesResult): void {
     }
     return;
   }
+
+  if (existsSync(".agents/rules")) {
+    infos.push(
+      "Found .agents/rules folder. This folder will not be found by Fusion for rules. Use .builder/rules instead."
+    );
+  }
+
   if (!result.rootRuleFile) {
     problems.push("Error with rules file.");
     outputMessages(problems, warnings, infos);
