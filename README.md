@@ -21,6 +21,9 @@ npx builder-doctor --verbose
 
 ## Network checks
 
+```bash
+npx builder-doctor network
+```
 The tool performs the following diagnostic checks for a valid http or ping response as a way to test network connectivity to:
 - firestore.googleapis.com
 - firebasestorage.googleapis.com
@@ -37,6 +40,9 @@ The tool cannot verify connectivity to (but you should):
 
 ## Rules checks
 
+```bash
+npx builder-doctor rules
+```
 The tool analyses your .builderrules, agents.md and rules in .builder/rules or .cursor/rules. Recommendations are made to:
 - Find where there are too many rules being applied at once causing the AI to ignore some rules.
 - Common missing front matter like `description` where needed
@@ -46,4 +52,5 @@ The tool analyses your .builderrules, agents.md and rules in .builder/rules or .
 ## ToDo
 - Verify if frontmatter like alwaysApply is respected without reference in agents.md
 - Verify if globs is respected without reference
+- Verify if rules are found from current working directory or root of project
 
