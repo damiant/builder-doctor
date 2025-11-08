@@ -87,7 +87,7 @@ function commentOn(result: RulesResult): void {
       infos.push(
         `${basename(
           r.filename
-        )} is marked as alwaysApply but is missing globs in the frontmatter. Consider adding globs to specify which files this rule should apply to.`
+        )} is marked as alwaysApply but is missing globs in the frontmatter. Consider adding globs to specify which files this rule should apply to, or removing alwaysApply.`
       );
     }
     if (r.lines > MAX_LINES && hasCorrectExtension) {

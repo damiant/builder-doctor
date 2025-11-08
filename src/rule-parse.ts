@@ -190,31 +190,37 @@ export function parseMdcFile(fileContent: string): MdcParseResult {
   }
 }
 
-  export function parseCursorRules(absolutePath: string): RuleFile {
-    let exists = false;
-    try {
-      const stat = statSync(absolutePath);
-      exists = stat.isFile();
-    } catch {
-      exists = false;
-    }
-    try {
-      if (exists) {
-        const fileContent = readFileSync(absolutePath, 'utf-8');
-        const lines = fileContent.split('\n').length;
-        const result = parseMdcFile(fileContent);
-        return {
-            filename: absolutePath,
-            description: result.frontmatter.description,
-            globs: result.frontmatter.glob,
-            alwaysApply: result.frontmatter.type ? result.frontmatter.type === "always" : undefined,
-            lines,
-            body: fileContent
-        }
-      } else {
-        throw new Error(`File not found at path: ${absolutePath}`);
-      }
-    } catch (error) {
-      throw new Error(`Error parsing MDC file at ${absolutePath}: ${error}`);
-    }
+function countNonEmptyLines(content: string): number {
+  return content.split("\n").filter((line) => line.trim().length > 0).length;
+}
+export function parseCursorRules(absolutePath: string): RuleFile {
+  let exists = false;
+  try {
+    const stat = statSync(absolutePath);
+    exists = stat.isFile();
+  } catch {
+    exists = false;
   }
+  try {
+    if (exists) {
+      const fileContent = readFileSync(absolutePath, "utf-8");
+      const lines = countNonEmptyLines(fileContent);
+
+      const result = parseMdcFile(fileContent);
+      return {
+        filename: absolutePath,
+        description: result.frontmatter.description,
+        globs: result.frontmatter.glob,
+        alwaysApply: result.frontmatter.type
+          ? result.frontmatter.type === "always"
+          : undefined,
+        lines,
+        body: fileContent,
+      };
+    } else {
+      throw new Error(`File not found at path: ${absolutePath}`);
+    }
+  } catch (error) {
+    throw new Error(`Error parsing MDC file at ${absolutePath}: ${error}`);
+  }
+}
