@@ -35,3 +35,15 @@ The tool performs the following diagnostic checks for a valid http or ping respo
 The tool cannot verify connectivity to (but you should):
 - *.fly.dev
 
+## Rules checks
+
+The tool analyses your .builderrules, agents.md and rules in .builder/rules or .cursor/rules. Recommendations are made to:
+- Find where there are too many rules being applied at once causing the AI to ignore some rules.
+- Common missing front matter like `description` where needed
+- Overuse of `alwaysApply`
+- Common incorrect namings of agents.md and .builderrules
+
+## ToDo
+- Verify if frontmatter like alwaysApply is respected without reference in agents.md
+- Verify if globs is respected without reference
+
