@@ -4,4 +4,5 @@ tsconfig.json
 *.log
 node_modules
 AGENTS.md
+.builderrules
 .builder/rules/**

@@ -1,4 +1,5 @@
 1.0.3
+- Add checks for rules files
 - Added ai.builder.io as a check
 
 1.0.2

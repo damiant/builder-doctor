@@ -31,17 +31,31 @@ export async function checkRules(options: RulesOptions): Promise<void> {
 }
 
 function commentOn(result: RulesResult): void {
+  const problems: string[] = [];
+  const warnings: string[] = [];
+  const infos: string[] = [];
+
   if (!result.hasAgentsMd && !result.hasBuilderRulesFile) {
+    if (existsSync("agent.md")) {
+      problem("Found agent.md file. Did you mean agents.md?");
+    }
+    if (existsSync("builderrules")) {
+      problem("Found builderrules file. Did you mean .builderrules?");
+    }
+    if (existsSync(".builderules")) {
+      problem("Found .builderules file. Did you mean .builderrules?");
+    }
+    return;
   }
   if (!result.rootRuleFile) {
-    console.log(`${red}✓${reset} Error with rules file.`);
+    problems.push("Error with rules file.");
+    outputMessages(problems, warnings, infos);
     return;
   }
   const rootFileLines = result.rootRuleFile.lines || 0;
   let lines = rootFileLines;
   let alwaysCount = 0;
   let alwaysList: string[] = [];
-  let problems = 0;
   for (const r of result.rules) {
     if (r.alwaysApply) {
       alwaysCount++;
@@ -51,82 +65,91 @@ function commentOn(result: RulesResult): void {
     const hasCorrectExtension = r.filename.toLowerCase().endsWith(".mdc");
 
     if (!hasCorrectExtension) {
-      warn(
+      warnings.push(
         `${basename(
           r.filename
         )} does not have a .mdc file extension. Is this file intended to be in the rules folder?`
       );
-      problems++;
     }
     if (!r.alwaysApply) {
       if (
         hasCorrectExtension &&
         (!r.description || r.description.trim().length === 0)
       ) {
-        warn(
+        warnings.push(
           `${basename(
             r.filename
           )} is missing a description in the frontmatter. Consider adding a description so that this rule can conditionally apply.`
         );
-        problems++;
       }
     }
     if (r.alwaysApply && !r.globs) {
-      info(
+      infos.push(
         `${basename(
           r.filename
         )} is marked as alwaysApply but is missing globs in the frontmatter. Consider adding globs to specify which files this rule should apply to.`
       );
-      problems++;
     }
     if (r.lines > MAX_LINES && hasCorrectExtension) {
-      problem(
+      problems.push(
         `${basename(r.filename)} has ${
           r.lines
         } lines. Reduce to below ${MAX_LINES} lines to avoid the AI ignoring some rules.`
       );
-      problems++;
     } else if (r.lines > WARN_LINES && hasCorrectExtension) {
-      warn(
+      warnings.push(
         `${basename(r.filename)} has ${
           r.lines
         } lines. Consider reducing below ${WARN_LINES} to avoid the AI ignoring some rules.`
       );
-      problems++;
     }
   }
 
   if (alwaysCount > 5) {
-    warn(
+    warnings.push(
       `You have ${alwaysCount} rules files marked as alwaysApply. This is the same as adding to ${result.rootRuleFile.filename} but with unsorted precendence. Consider limiting use of alwaysApply.`
     );
-    problems++;
   }
   if (rootFileLines > MAX_LINES) {
-    problem(
+    problems.push(
       `${result.rootRuleFile.filename} has ${rootFileLines} lines. Consider reducing below ${MAX_LINES} to avoid the AI ignoring some rules.`
     );
-    problems++;
   }
   if (lines > MAX_TOTAL_LINES) {
     if (alwaysCount > 0) {
-      problem(
+      problems.push(
         `Your rules files have a total of ${lines} lines that are always applied. Consider removing alwaysApply from ${alwaysList.join(
           ", "
         )} to reduce the line count below ${MAX_TOTAL_LINES} lines to avoid the AI ignoring some rules.`
       );
     } else {
-      problem(
+      problems.push(
         `Your rules files have a total of ${lines} lines that are always applied. Consider reducing this below ${MAX_TOTAL_LINES} lines to avoid the AI ignoring some rules.`
       );
     }
-    problems++;
   }
-  if (problems == 0) {
+
+  if (problems.length === 0 && warnings.length === 0 && infos.length === 0) {
     console.log(
       `${green}✓${reset} ${result.rootRuleFile.filename} (${result.rules.length} rules files. ${lines} lines).`
     );
+  } else {
+    console.log();
+    console.log(
+      `The following recommendations were found with your rules (${result.rootRuleFile.filename}):`
+    );
+    outputMessages(problems, warnings, infos);
   }
+}
+
+function outputMessages(
+  problems: string[],
+  warnings: string[],
+  infos: string[]
+): void {
+  problems.forEach((msg) => console.log(`${red}✗${reset} ${msg}`));
+  warnings.forEach((msg) => console.log(`${orange}⚠${reset} ${msg}`));
+  infos.forEach((msg) => console.log(`${blue}ℹ${reset} ${msg}`));
 }
 
 function problem(message: string): void {
