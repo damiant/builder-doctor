@@ -11,6 +11,7 @@ export interface RulesOptions {
 }
 
 interface RulesResult {
+  rootDir: string;
   hasBuilderRulesFile: boolean;
   hasAgentsMd: boolean;
   rules: RuleFile[];
@@ -19,16 +20,17 @@ interface RulesResult {
 
 export async function checkRules(options: RulesOptions): Promise<void> {
   const result: RulesResult = {
+    rootDir: process.cwd(),
     hasAgentsMd: hasAgentsMd(),
     hasBuilderRulesFile: hasBuilderRulesFile(),
-    rules: await getRuleFiles(),
+    rules: await getRuleFiles(process.cwd()),
     rootRuleFile: getRootRuleFile(),
   };
   if (options.verbose) {
     console.log("Rules Check Result:", JSON.stringify(result, null, 2));
   }
   commentOn(result);
-  
+
 }
 
 function commentOn(result: RulesResult): void {
@@ -46,10 +48,15 @@ function commentOn(result: RulesResult): void {
     if (existsSync(".builderules")) {
       problem("Found .builderules file. Did you mean .builderrules?");
     }
+    const builderRules = join(result.rootDir, ".agents", "rules");
+    if (existsSync(builderRules)) {
+      problem("Found .builder/rules folder but no .builderrules file.");
+    }
     return;
   }
 
-  if (existsSync(".agents/rules")) {
+  const agentRules = join(result.rootDir, ".agents", "rules");
+  if (existsSync(agentRules)) {
     infos.push(
       "Found .agents/rules folder. This folder will not be found by Fusion for rules. Use .builder/rules instead."
     );
@@ -100,14 +107,12 @@ function commentOn(result: RulesResult): void {
     }
     if (r.lines > MAX_LINES && hasCorrectExtension) {
       problems.push(
-        `${basename(r.filename)} has ${
-          r.lines
+        `${basename(r.filename)} has ${r.lines
         } lines. Reduce to below ${MAX_LINES} lines to avoid the AI ignoring some rules.`
       );
     } else if (r.lines > WARN_LINES && hasCorrectExtension) {
       warnings.push(
-        `${basename(r.filename)} has ${
-          r.lines
+        `${basename(r.filename)} has ${r.lines
         } lines. Consider reducing below ${WARN_LINES} to avoid the AI ignoring some rules.`
       );
     }
@@ -299,8 +304,7 @@ const IGNORE_PATTERNS = [
   "**/GoogleService-Info.plist",
 ];
 
-async function getRuleFiles(): Promise<RuleFile[]> {
-  const currentDir = process.cwd();
+async function getRuleFiles(rootDir: string): Promise<RuleFile[]> {
   const rulesFolders = [".cursor/rules", ".builder/rules"];
   const rulesFiles = [
     ".cursorrules",
@@ -311,7 +315,7 @@ async function getRuleFiles(): Promise<RuleFile[]> {
   let files: RuleFile[] = [];
   try {
     for (const rulesFolder of rulesFolders) {
-      const projectRulesDir = join(currentDir, rulesFolder);
+      const projectRulesDir = join(rootDir, rulesFolder);
       if (existsSync(projectRulesDir)) {
         files = [
           ...findRulesFilesRecursively(projectRulesDir, projectRulesDir),
@@ -320,7 +324,7 @@ async function getRuleFiles(): Promise<RuleFile[]> {
     }
     return files;
   } catch (error) {
-    console.debug(`Error reading ${currentDir}:`, error);
+    console.debug(`Error reading ${rootDir}:`, error);
   }
 
   return [];
