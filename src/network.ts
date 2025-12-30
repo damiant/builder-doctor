@@ -6,6 +6,94 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+export async function runNetwork(options: NetworkOptions): Promise<void> {
+  const { verbose } = options;
+
+  console.log(`Checking connectivity to Builder.io services...`);
+
+  await check({
+    host: "firestore.googleapis.com",
+    url: "https://firestore.googleapis.com/",
+    verbose,
+    expectedStatus: 404,
+    expectedContent: "<span id=logo aria-label=Google>",
+  });
+
+  await check({
+    host: "firebasestorage.googleapis.com",
+    url: "https://firebasestorage.googleapis.com/",
+    verbose,
+    expectedStatus: 404,
+    expectedContent: "<span id=logo aria-label=Google>",
+  });
+
+  await check({
+    host: "builder.io",
+    url: "https://www.builder.io/",
+    verbose,
+    expectedStatus: 200,
+    expectedContent: "<body>",
+  });
+
+  await check({
+    host: "builder.io app",
+    url: "https://builder.io/content",
+    verbose,
+    expectedStatus: 200,
+    expectedContent: "<body>",
+  });
+
+  await check({
+    host: "cdn.builder.io",
+    url: "https://cdn.builder.io/static/media/builder-logo.bff0faae.png",
+    verbose,
+    expectedStatus: 200,
+    expectedHeader: "content-type",
+    expectedHeaderValue: "image/png",
+  });
+
+  await check({
+    host: "*.builder.codes",
+    url: "https://stuff.builder.codes/",
+    verbose,
+    expectedStatus: 404,
+    expectedHeader: "server",
+    expectedHeaderValue: "Google Frontend",
+  });
+
+  await check({
+    host: "*.builder.my",
+    url: "https://www.builder.my/",
+    verbose,
+    expectedStatus: 200,
+    expectedHeader: "x-powered-by",
+    expectedHeaderValue: "Next.js",
+  });
+
+  await check({
+    host: "*.fly.dev",
+    url: "https://status.flyio.net/",
+    verbose,
+    expectedStatus: 200,
+    message: " (Unknown status)",
+  });
+
+  await check({
+    host: "ai.builder.io",
+    url: "https://ai.builder.io/",
+    verbose,
+    expectedStatus: 200,
+  });
+
+  await check({
+    host: "34.136.119.149",
+    verbose,
+    message: " (ping)",
+    additionalErrorInfo: "This is the Static IP address that Builder.io uses",
+    ping: true,
+  });
+}
+
 export interface Response {
   statusCode?: number;
   statusMessage?: string;
@@ -26,7 +114,7 @@ interface CheckOptions {
   ping?: boolean;
 }
 
-export async function get(url: string): Promise<Response> {
+async function get(url: string): Promise<Response> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
     const client = parsedUrl.protocol === "https:" ? https : http;
@@ -63,7 +151,7 @@ interface CheckResult {
   details: string;
 }
 
-export async function check(options: CheckOptions): Promise<void> {
+async function check(options: CheckOptions): Promise<void> {
   let result: CheckResult = { reason: "", details: "" };
   try {
     if (options.ping) {
@@ -135,7 +223,7 @@ function checkPing(options: CheckOptions): Promise<CheckResult> {
         ? `ping -n 1 ${options.host}`
         : `ping -c 1 ${options.host}`;
 
-      const { stdout, stderr } = await execAsync(pingCommand);
+      const { stderr } = await execAsync(pingCommand);
 
       if (stderr) {
         resolve({
@@ -152,4 +240,8 @@ function checkPing(options: CheckOptions): Promise<CheckResult> {
       });
     }
   });
+}
+
+interface NetworkOptions {
+  verbose: boolean;
 }
