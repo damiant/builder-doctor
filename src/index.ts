@@ -6,8 +6,14 @@ import { runSetup } from "./setup";
 import { runEnv } from "./env";
 
 const args = process.argv.slice(2);
+const verbose = args.includes("--verbose");
+const rules = args.includes("rules");
+const network = args.includes("network");
+const setup = args.includes("setup");
+const env = args.includes("env");
+const all = !rules && !network && !setup && !env;
 
-if (args.includes("--help") || args.includes("-h")) {
+if (args.includes("--help") || args.includes("-h") || all) {
   console.log(`
 builder-doctor - A CLI tool for Builder.io diagnostics
 
@@ -34,16 +40,11 @@ Examples:
   process.exit(0);
 }
 
-const verbose = args.includes("--verbose");
-const rules = args.includes("rules");
-const network = args.includes("network");
-const setup = args.includes("setup");
-const env = args.includes("env");
-const all = !rules && !network && !setup && !env;
+
 
 async function main() {
   try {
-    if (all || network) {
+    if (network) {
       console.log(`Checking connectivity to Builder.io services...`);
 
       await check({
@@ -130,7 +131,7 @@ async function main() {
       });
     }
 
-    if (all || rules) {
+    if (rules) {
       await checkRules({
         verbose,
       });
