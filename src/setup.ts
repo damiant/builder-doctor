@@ -10,9 +10,11 @@ export interface SetupResult {
 }
 
 const prompt = `
-Review the project and provide the commands to run that will install its dependencies (title it Setup Command).
+Review the project or in the case of a mono-repo projects and provide the commands to run that will install its dependencies (title it Setup Command).
 Also review the commands to run that will start the dev server (title it Dev Command).
-Keep the output brief and to the point and output as text rather than markdown starting and ending the output with "-------------------------"`;
+If there are multiple projects separate each Setup Command and Dev Command with a title for the project (use dashes to underline the project title)
+Keep the output brief and to the point and output as text rather than markdown starting and ending the output with "-------------------------"
+`;
 
 const SETUP_CONFIG = {
   command: "npx",
