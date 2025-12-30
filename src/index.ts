@@ -2,6 +2,7 @@
 
 import { checkRules } from "./rules";
 import { check } from "./network";
+import { runSetup } from "./setup";
 
 const args = process.argv.slice(2);
 
@@ -14,6 +15,7 @@ Usage: builder-doctor [options] [commands]
 Commands:
   network     Check connectivity to Builder.io services
   rules       Check Builder.io rules configuration
+  setup       Run Builder.io agent to analyze project and provide setup instructions
 
 Options:
   --verbose   Show detailed output for each check
@@ -23,6 +25,7 @@ Examples:
   builder-doctor              Run all checks
   builder-doctor network      Run only network checks
   builder-doctor rules        Run only rules checks
+  builder-doctor setup        Get project setup instructions from Builder.io agent
   builder-doctor --verbose    Run all checks with detailed output
 `);
   process.exit(0);
@@ -31,7 +34,8 @@ Examples:
 const verbose = args.includes("--verbose");
 const rules = args.includes("rules");
 const network = args.includes("network");
-const all = !rules && !network;
+const setup = args.includes("setup");
+const all = !rules && !network && !setup;
 
 async function main() {
   try {
@@ -126,6 +130,13 @@ async function main() {
       await checkRules({
         verbose,
       });
+    }
+
+    if (setup) {
+      const result = await runSetup({ verbose });
+      if (!result.success) {
+        process.exit(result.exitCode);
+      }
     }
   } catch (error) {
     console.error("An error occurred:", error);
