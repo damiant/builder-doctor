@@ -1,6 +1,6 @@
 {
   "name": "builder-doctor",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A CLI tool for Builder.io diagnostics",
   "main": "dist/index.js",
   "bin": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "start": "npm run build && node dist/index.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

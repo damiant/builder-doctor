@@ -4,6 +4,30 @@ import { checkRules } from "./rules";
 import { check } from "./network";
 
 const args = process.argv.slice(2);
+
+if (args.includes("--help") || args.includes("-h")) {
+  console.log(`
+builder-doctor - A CLI tool for Builder.io diagnostics
+
+Usage: builder-doctor [options] [commands]
+
+Commands:
+  network     Check connectivity to Builder.io services
+  rules       Check Builder.io rules configuration
+
+Options:
+  --verbose   Show detailed output for each check
+  --help, -h  Show this help message
+
+Examples:
+  builder-doctor              Run all checks
+  builder-doctor network      Run only network checks
+  builder-doctor rules        Run only rules checks
+  builder-doctor --verbose    Run all checks with detailed output
+`);
+  process.exit(0);
+}
+
 const verbose = args.includes("--verbose");
 const rules = args.includes("rules");
 const network = args.includes("network");
