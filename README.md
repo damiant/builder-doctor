@@ -48,6 +48,7 @@ The tool performs diagnostic checks for valid HTTP or ping responses to test net
 
 - firestore.googleapis.com
 - firebasestorage.googleapis.com
+- identitytoolkit.googleapis.com
 - builder.io
 - ai.builder.io
 - builder.io app
