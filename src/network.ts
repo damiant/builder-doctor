@@ -28,6 +28,14 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
   });
 
   await check({
+    host: "identitytoolkit.googleapis.com",
+    url: "http://identitytoolkit.googleapis.com/",
+    verbose,
+    expectedStatus: 404,
+    expectedContent: "<span id=logo aria-label=Google>",
+  });
+
+  await check({
     host: "builder.io",
     url: "https://www.builder.io/",
     verbose,
