@@ -1,3 +1,6 @@
+1.0.10
+- Added builderio.xyz to checks on network
+
 1.0.9
 - Added identitytoolkit.googleapis.com to checks on network
 

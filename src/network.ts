@@ -41,6 +41,14 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
     verbose,
     expectedStatus: 200,
     expectedContent: "<body>",
+    message: " (Builder website)"
+  });
+
+    await check({
+    host: "api.builder.io",
+    url: "https://api.builder.io/",
+    verbose,
+    expectedStatus: 404,
   });
 
   await check({
@@ -49,6 +57,7 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
     verbose,
     expectedStatus: 200,
     expectedContent: "<body>",
+    message: " (Builder web application)"
   });
 
   await check({
@@ -58,6 +67,7 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
     expectedStatus: 200,
     expectedHeader: "content-type",
     expectedHeaderValue: "image/png",
+    message: " (Builder Content Network)",
   });
 
   await check({
@@ -87,10 +97,11 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
   });
 
   await check({
-    host: "ai.builder.io",
-    url: "https://ai.builder.io/",
+    host: "builderio.xyz",
+    url: "https://builderio.xyz/",
     verbose,
-    expectedStatus: 200,
+    expectedStatus: 404,
+    message: " (Cloud Containers)"
   });
 
   await check({
