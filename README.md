@@ -49,12 +49,13 @@ The tool performs diagnostic checks for valid HTTP or ping responses to test net
 - firestore.googleapis.com
 - firebasestorage.googleapis.com
 - identitytoolkit.googleapis.com
-- builder.io
-- ai.builder.io
-- builder.io app
-- cdn.builder.io
+- builder.io (Website)
+- api.builder.io
+- builder.io (Web application)
+- cdn.builder.io (Content Network)
 - *.builder.codes
 - *.builder.my
+- builderio.xyz (Cloud Containers)
 - 34.136.119.149 (Static IP address used by Builder.io)
 
 The tool cannot verify connectivity to (but you should):
