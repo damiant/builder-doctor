@@ -1,3 +1,6 @@
+1.0.11
+- Updated check for cdn.builder.io
+
 1.0.10
 - Added builderio.xyz to checks on network
 

@@ -62,11 +62,11 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
 
   await check({
     host: "cdn.builder.io",
-    url: "https://cdn.builder.io/static/media/builder-logo.bff0faae.png",
+    url: "https://cdn.builder.io/api/v1/image/assets%2FYJIGb4i01jvw0SRdL5Bt%2F161de41f092049efbe21d4a438c23505?width=120",
     verbose,
     expectedStatus: 200,
     expectedHeader: "content-type",
-    expectedHeaderValue: "image/png",
+    expectedHeaderValue: "image/svg+xml",
     message: " (Builder Content Network)",
   });
 
