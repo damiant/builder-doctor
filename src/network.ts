@@ -1,8 +1,7 @@
-import * as https from "https";
-import * as http from "http";
-import { IncomingHttpHeaders } from "http2";
+import { IncomingHttpHeaders } from "http";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { safeFetch } from "./fetch";
 
 const execAsync = promisify(exec);
 
@@ -134,31 +133,18 @@ interface CheckOptions {
 }
 
 async function get(url: string): Promise<Response> {
-  return new Promise((resolve, reject) => {
-    const parsedUrl = new URL(url);
-    const client = parsedUrl.protocol === "https:" ? https : http;
-
-    client
-      .get(url, (res) => {
-        let data = "";
-
-        res.on("data", (chunk) => {
-          data += chunk;
-        });
-
-        res.on("end", () => {
-          resolve({
-            statusCode: res.statusCode || 0,
-            body: data,
-            statusMessage: res.statusMessage || "",
-            headers: res.headers,
-          });
-        });
-      })
-      .on("error", (err) => {
-        reject(err);
-      });
+  const res = await safeFetch(url);
+  const body = await res.text();
+  const headers: IncomingHttpHeaders = {};
+  res.headers.forEach((value, key) => {
+    headers[key] = value;
   });
+  return {
+    statusCode: res.status,
+    body,
+    statusMessage: res.statusText,
+    headers,
+  };
 }
 
 const red = "\x1b[31m";
