@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, statSync } from "fs";
+import { existsSync, readdirSync, statSync, readFileSync } from "fs";
 import { basename, join } from "path";
 import { parseCursorRules as readRuleFile, RuleFile } from "./rule-parse";
 
@@ -19,6 +19,8 @@ interface RulesResult {
 }
 
 export async function checkRules(options: RulesOptions): Promise<void> {
+  console.log(' ');
+  console.log("Checking AI files for issues....");
   const result: RulesResult = {
     rootDir: process.cwd(),
     hasAgentsMd: hasAgentsMd(),
@@ -38,6 +40,31 @@ function commentOn(result: RulesResult): void {
   const warnings: string[] = [];
   const infos: string[] = [];
 
+  // Check for conflicting AGENTS.md and CLAUDE.md files
+  const agentsMdPath = findFileCaseInsensitive("agents.md");
+  const claudeMdPath = findFileCaseInsensitive("claude.md");
+  if (agentsMdPath && claudeMdPath) {
+    try {
+      const agentContent = readFileSync(agentsMdPath, "utf-8");
+      const claudeContent = readFileSync(claudeMdPath, "utf-8");
+      if (agentContent !== claudeContent) {
+        warnings.push(
+          "Your project has both a AGENTS.md and CLAUDE.md file with differing information. Please use either file but not both"
+        );
+      }
+    } catch (error) {
+      // ignore read errors
+    }
+  }
+
+  // Check for SKILL.md files in wrong locations
+  const misplacedSkills = findMisplacedSkillFiles(result.rootDir);
+  misplacedSkills.forEach((folder) => {
+    problems.push(
+      `The file SKILL.md in folder ${folder} should be located in the .builder/skills`
+    );
+  });
+
   if (!result.hasAgentsMd && !result.hasBuilderRulesFile) {
     if (existsSync("agent.md")) {
       problem("Found agent.md file. Did you mean agents.md?");
@@ -46,11 +73,26 @@ function commentOn(result: RulesResult): void {
       problem("Found builderrules file. Did you mean .builderrules?");
     }
     if (existsSync(".builderules")) {
-      problem("Found .builderules file. Did you mean .builderrules?");
+      problem("Found .builderules file. Perhaps rename this file to .builderrules?");
     }
-    const builderRules = join(result.rootDir, ".agents", "rules");
-    if (existsSync(builderRules)) {
-      problem("Found .builder/rules folder but no .builderrules file.");
+    if (existsSync(".builderrule")) {
+      problem(
+        "Found .builderrule file. Perhaps rename this file to .builderrules?",
+      );
+    }
+    if (
+      !existsSync("agent.md") &&
+      !existsSync("builderrules") &&
+      !existsSync(".builderules") &&
+      !existsSync(".builderrule") &&
+      problems.length === 0
+    ) {
+      // No rule files and no common mistakes and no other problems
+      console.log(
+        `${green}✓${reset} No issues found with .md, rules, skills, or subagents`
+      );
+    } else if (problems.length > 0) {
+      outputMessages(problems, warnings, infos);
     }
     return;
   }
@@ -77,13 +119,15 @@ function commentOn(result: RulesResult): void {
       alwaysList.push(basename(r.filename));
       lines += r.lines;
     }
-    const hasCorrectExtension = r.filename.toLowerCase().endsWith(".mdc");
+    const fileBaseName = basename(r.filename).toLowerCase();
+    const hasCorrectExtension =
+      fileBaseName.endsWith(".mdc") || fileBaseName === "rule.md";
 
     if (!hasCorrectExtension) {
       warnings.push(
         `${basename(
           r.filename
-        )} does not have a .mdc file extension. Is this file intended to be in the rules folder?`
+        )} does not have a .mdc file extension (or RULE.md). Is this file intended to be in the rules folder?`
       );
     }
     if (!r.alwaysApply) {
@@ -144,7 +188,7 @@ function commentOn(result: RulesResult): void {
 
   if (problems.length === 0 && warnings.length === 0 && infos.length === 0) {
     console.log(
-      `${green}✓${reset} ${result.rootRuleFile.filename} (${result.rules.length} rules files. ${lines} lines).`
+      `${green}✓${reset} No issues found with .md, rules, skills, or subagents`
     );
   } else {
     console.log();
@@ -183,6 +227,53 @@ function hasAgentsMd(): boolean {
 
 function hasBuilderRulesFile(): boolean {
   return existsSync(".builderrules");
+}
+
+function findFileCaseInsensitive(filename: string): string | undefined {
+  const filenameLower = filename.toLowerCase();
+  try {
+    const entries = readdirSync(".");
+    const found = entries.find((entry) => entry.toLowerCase() === filenameLower);
+    return found ? found : undefined;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+function findMisplacedSkillFiles(rootDir: string): string[] {
+  const misplaced: string[] = [];
+  const skillsPath = join(rootDir, ".builder", "skills");
+
+  function searchDirectory(dir: string): void {
+    try {
+      if (!existsSync(dir)) {
+        return;
+      }
+      const entries = readdirSync(dir);
+      for (const entry of entries) {
+        const entryPath = join(dir, entry);
+        const stat = statSync(entryPath);
+
+        if (!stat) continue;
+
+        if (stat.isDirectory()) {
+          // Skip the correct .builder/skills directory
+          if (entryPath === skillsPath) {
+            continue;
+          }
+          searchDirectory(entryPath);
+        } else if (entry.toLowerCase() === "skill.md") {
+          // Found a SKILL.md file not in .builder/skills
+          misplaced.push(dir);
+        }
+      }
+    } catch (error) {
+      // ignore directory read errors
+    }
+  }
+
+  searchDirectory(rootDir);
+  return misplaced;
 }
 
 const IGNORE_FILES = [".gitignore", ".builderignore"];
