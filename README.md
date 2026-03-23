@@ -25,13 +25,23 @@ builder-doctor [options] [commands]
 - `--verbose` - Show detailed output for each check
 - `--help, -h` - Show help message
 
-### Running All Checks
+### Running Default Checks
 
 Running without any command will execute both network and rules checks:
 
 ```bash
 npx builder-doctor
 npx builder-doctor --verbose  # with detailed output
+```
+
+### Displaying Help
+
+To view the help message:
+
+```bash
+npx builder-doctor help
+npx builder-doctor --help
+npx builder-doctor -h
 ```
 
 ## Commands
@@ -72,9 +82,12 @@ npx builder-doctor rules
 The tool analyzes your `.builderrules`, `agents.md`, and rules in `.builder/rules` or `.cursor/rules`. Recommendations are made to:
 
 - Find where there are too many rules being applied at once causing the AI to ignore some rules
+- Detect SKILL.md files in incorrect locations (should be in `.builder/skills`)
+- Detect AGENTS.md and CLAUDE.md files with conflicting content
 - Common missing front matter like `description` where needed
 - Overuse of `alwaysApply`
-- Common incorrect namings of `agents.md` and `.builderrules`
+- Rule files with incorrect extensions (should be `.mdc` instead of `.md`, except for `RULE.md`)
+- Common incorrect namings of `agents.md` and `.builderrules` (including `.builderrule` and `.builderules`)
 
 ### setup
 
