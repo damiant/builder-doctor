@@ -4,7 +4,11 @@ import { checkRules } from "./rules";
 import { runSetup } from "./setup";
 import { runEnv } from "./env";
 import { runNetwork } from "./network";
-import { runInstallSkill } from "./install-skill";
+import { listAvailableSkills, runInstallSkill } from "./install-skill";
+import {
+  buildNonInteractiveMessage,
+  formatSkillInstallLines,
+} from "./non-interactive-message";
 
 const args = process.argv.slice(2);
 const verbose = args.includes("--verbose");
@@ -12,17 +16,14 @@ const rules = args.includes("rules");
 const network = args.includes("network");
 const setup = args.includes("setup");
 const env = args.includes("env");
+const skills = args.includes("skills");
 const showHelp =
   args.includes("--help") || args.includes("-h") || args.includes("help");
 const installSkill = args[0] === "install-skill";
 const installSkillName = installSkill ? args[1] : undefined;
-const all = !rules && !network && !setup && !env && !showHelp && !installSkill;
+const all =
+  !rules && !network && !setup && !env && !skills && !showHelp && !installSkill;
 const nonInteractive = !process.stdin.isTTY || !process.stdout.isTTY;
-const nonInteractiveMessage =
-  `Ask the user (using AskUserQuestion) whether they would like to 1. Install the skill creator 2. Install a skill, 3. Review rules for issues. ` +
-  `If 1 is chosen then run npx builder-doctor install-skill skill-creator, ` +
-  `if 2 is chosen then ask the user to enter the skill they would like to install and then run npx builder-doctor install-skill <skill-name>, ` +
-  `If 3 is chosen then run npx builder-doctor rules`;
 
 if (showHelp) {
   console.log(`
@@ -35,6 +36,7 @@ Commands:
   rules       Check Builder.io rules configuration
   setup       Run Builder.io agent to analyze project and provide setup instructions
   env         Display all environment variables sorted alphabetically
+  skills      List installable skills from BuilderIO/builder-agent-skills
   install-skill <skill-name>  Install a skill from BuilderIO/builder-agent-skills
   help        Show this help message
 
@@ -49,6 +51,7 @@ Examples:
   builder-doctor rules        Run only rules checks
   builder-doctor setup        Get project setup instructions from Builder.io agent
   builder-doctor env          Display environment variables
+  builder-doctor skills       List all available skills and descriptions
   builder-doctor install-skill skill-creator  Install a skill into .builder/skills
   builder-doctor --verbose    Run rules and network checks with detailed output
 `);
@@ -56,12 +59,19 @@ Examples:
 }
 
 async function main() {
-  if (nonInteractive && args.length === 0) {
-    console.log(nonInteractiveMessage);
-    return;
-  }
-
   try {
+    if (nonInteractive && args.length === 0) {
+      const skillsList = await listAvailableSkills({ verbose });
+      console.log(buildNonInteractiveMessage(skillsList));
+      return;
+    }
+
+    if (skills) {
+      const skillsList = await listAvailableSkills({ verbose });
+      console.log(formatSkillInstallLines(skillsList));
+      return;
+    }
+
     if (network || all) {
       await runNetwork({ verbose });
     }

@@ -6,9 +6,17 @@ import { createGunzip } from "node:zlib";
 import * as tar from "tar";
 import { safeFetch } from "./fetch";
 
+const skillsRepoTarballUrl =
+  "https://codeload.github.com/BuilderIO/builder-agent-skills/tar.gz/refs/heads/main";
+
 export interface InstallSkillOptions {
   skillName: string;
   verbose?: boolean;
+}
+
+export interface SkillSummary {
+  name: string;
+  description: string;
 }
 
 export async function runInstallSkill(
@@ -18,14 +26,11 @@ export async function runInstallSkill(
 
   validateSkillName(skillName);
 
-  const tarballUrl =
-    "https://codeload.github.com/BuilderIO/builder-agent-skills/tar.gz/refs/heads/main";
-
   if (verbose) {
-    console.log(`Downloading skill "${skillName}" from ${tarballUrl}`);
+    console.log(`Downloading skill "${skillName}" from ${skillsRepoTarballUrl}`);
   }
 
-  const response = await safeFetch(tarballUrl);
+  const response = await safeFetch(skillsRepoTarballUrl);
   if (!response.ok) {
     throw new Error(
       `Failed to download skills repository (HTTP ${response.status} ${response.statusText})`
@@ -86,6 +91,62 @@ export async function runInstallSkill(
   );
 }
 
+export async function listAvailableSkills(options?: {
+  verbose?: boolean;
+}): Promise<SkillSummary[]> {
+  const verbose = options?.verbose ?? false;
+
+  if (verbose) {
+    console.log(`Downloading available skills from ${skillsRepoTarballUrl}`);
+  }
+
+  const response = await safeFetch(skillsRepoTarballUrl);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to download skills repository (HTTP ${response.status} ${response.statusText})`
+    );
+  }
+
+  const skillDescriptions = new Map<string, string>();
+
+  await pipeline(
+    Readable.from(Buffer.from(await response.arrayBuffer())),
+    createGunzip(),
+    tar.t({
+      strict: true,
+      onentry: (entry) => {
+        const entryPath = entry.path;
+        assertSafeArchivePath(entryPath);
+
+        const match = entryPath.match(/^[^/]+\/([^/]+)\/SKILL\.md$/);
+        if (!match) {
+          entry.resume();
+          return;
+        }
+
+        const skillName = match[1];
+        const chunks: Buffer[] = [];
+
+        entry.on("data", (chunk) => {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        });
+
+        entry.on("end", () => {
+          const markdown = Buffer.concat(chunks).toString("utf8");
+          skillDescriptions.set(
+            skillName,
+            extractDescriptionFromSkillMarkdown(markdown)
+          );
+        });
+      },
+    })
+  );
+
+  return Array.from(skillDescriptions.entries())
+    .map(([name, description]) => ({ name, description }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 function validateSkillName(skillName: string): void {
   if (!skillName || !/^[a-zA-Z0-9._-]+$/.test(skillName)) {
     throw new Error(
@@ -111,4 +172,70 @@ function assertSafeArchivePath(entryPath: string): void {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function extractDescriptionFromSkillMarkdown(markdown: string): string {
+  const lines = removeFrontmatter(markdown.replace(/\r\n/g, "\n")).split("\n");
+
+  const paragraphs: string[] = [];
+  let currentParagraph: string[] = [];
+  let inCodeFence = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith("```")) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+
+    if (inCodeFence) {
+      continue;
+    }
+
+    if (!trimmed) {
+      if (currentParagraph.length > 0) {
+        paragraphs.push(currentParagraph.join(" "));
+        currentParagraph = [];
+      }
+      continue;
+    }
+
+    if (trimmed.startsWith("#")) {
+      if (currentParagraph.length > 0) {
+        paragraphs.push(currentParagraph.join(" "));
+        currentParagraph = [];
+      }
+      continue;
+    }
+
+    currentParagraph.push(trimmed);
+  }
+
+  if (currentParagraph.length > 0) {
+    paragraphs.push(currentParagraph.join(" "));
+  }
+
+  if (paragraphs.length === 0) {
+    return "No description available.";
+  }
+
+  return paragraphs[0]
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function removeFrontmatter(content: string): string {
+  if (!content.startsWith("---\n")) {
+    return content;
+  }
+
+  const endMarkerIndex = content.indexOf("\n---\n", 4);
+  if (endMarkerIndex === -1) {
+    return content;
+  }
+
+  return content.slice(endMarkerIndex + 5);
 }
