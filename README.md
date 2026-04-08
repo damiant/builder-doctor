@@ -114,6 +114,16 @@ npx builder-doctor env --verbose  # shows count of variables
 
 Outputs all environment variables in `NAME=value` format, one per line, sorted alphabetically. Useful for debugging environment configuration issues.
 
+### install-skill
+
+Install a skill from `https://github.com/BuilderIO/builder-agent-skills` into `.builder/skills/<skill-name>`.
+
+```bash
+npx builder-doctor install-skill skill-creator
+```
+
+If files already exist for that skill, they are overwritten.
+
 ## Examples
 
 ```bash
@@ -122,6 +132,7 @@ builder-doctor network          # Run only network checks
 builder-doctor rules            # Run only rules checks
 builder-doctor setup            # Get project setup instructions
 builder-doctor env              # Display environment variables
+builder-doctor install-skill skill-creator  # Install a skill into .builder/skills
 builder-doctor --verbose        # Run all checks with detailed output
 ```
 
