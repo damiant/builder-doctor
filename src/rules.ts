@@ -257,8 +257,8 @@ function findMisplacedSkillFiles(rootDir: string): string[] {
         if (!stat) continue;
 
         if (stat.isDirectory()) {
-          // Skip the correct .builder/skills directory
-          if (entryPath === skillsPath) {
+          // Skip the correct .builder/skills directory and dependency folders
+          if (entryPath === skillsPath || entry === "node_modules") {
             continue;
           }
           searchDirectory(entryPath);

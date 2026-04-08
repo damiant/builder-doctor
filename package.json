@@ -26,6 +26,7 @@
     "dist"
   ],
   "dependencies": {
+    "tar": "^7.4.3",
     "undici": "^7.22.0"
   }
 }
