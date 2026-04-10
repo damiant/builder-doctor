@@ -148,7 +148,7 @@ export async function runListSkills(
       ? `npx builder-doctor install-skill ${skillName}`
       : `npx builder-doctor install-skill ${skillName} --source ${sourceRepo}`;
 
-    return [skillName, "=========", description, installCommand].join("\n");
+    return [skillName, "=========", description, `\nInstall Command: `+installCommand].join("\n");
   });
 
   console.log(formattedSkills.join("\n\n"));
@@ -245,12 +245,9 @@ function assertSafeArchivePath(entryPath: string): void {
 }
 
 async function readEntryToString(
-  entry: AsyncIterable<string | Buffer> & {
-    setEncoding?: (encoding: BufferEncoding) => void;
-  }
+  entry: AsyncIterable<string | Buffer>
 ): Promise<string> {
   const chunks: string[] = [];
-  entry.setEncoding?.("utf8");
 
   for await (const chunk of entry) {
     chunks.push(typeof chunk === "string" ? chunk : chunk.toString("utf8"));
@@ -262,9 +259,43 @@ async function readEntryToString(
 function extractSkillDescription(content: string): string {
   const frontMatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (frontMatterMatch) {
-    const descriptionLine = frontMatterMatch[1].match(/^description:\s*(.+)$/m);
-    if (descriptionLine) {
-      return descriptionLine[1].trim().replace(/^['"]|['"]$/g, "");
+    const frontMatterLines = frontMatterMatch[1].split(/\r?\n/);
+
+    for (let i = 0; i < frontMatterLines.length; i += 1) {
+      const line = frontMatterLines[i];
+      const match = line.match(/^description:\s*(.*)$/);
+      if (!match) {
+        continue;
+      }
+
+      const descriptionValue = match[1].trim();
+      if (descriptionValue === ">" || descriptionValue === "|") {
+        const blockLines: string[] = [];
+
+        for (let j = i + 1; j < frontMatterLines.length; j += 1) {
+          const blockLine = frontMatterLines[j];
+
+          if (blockLine.trim() === "") {
+            blockLines.push("");
+            continue;
+          }
+
+          if (!/^\s+/.test(blockLine)) {
+            break;
+          }
+
+          blockLines.push(blockLine.trim());
+        }
+
+        const blockDescription = blockLines.join(" ").replace(/\s+/g, " ").trim();
+        if (blockDescription) {
+          return blockDescription;
+        }
+      }
+
+      if (descriptionValue) {
+        return descriptionValue.replace(/^['"]|['"]$/g, "");
+      }
     }
   }
 
@@ -276,9 +307,21 @@ function extractSkillDescription(content: string): string {
   const descriptionLine = contentWithoutFrontMatter
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .find((line) => line && !line.startsWith("#") && !line.startsWith("```"));
+    .find(
+      (line) =>
+        line &&
+        !line.startsWith("#") &&
+        !line.startsWith("```") &&
+        !/^>\s*$/.test(line)
+    );
 
-  return descriptionLine ?? "No description provided.";
+  if (!descriptionLine) {
+    return "No description provided.";
+  }
+
+  return descriptionLine.startsWith(">")
+    ? descriptionLine.replace(/^>\s*/, "")
+    : descriptionLine;
 }
 
 function resolveSourceRepository(
