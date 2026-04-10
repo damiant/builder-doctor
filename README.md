@@ -120,6 +120,8 @@ Outputs all environment variables in `NAME=value` format, one per line, sorted a
 
 Install a skill from `https://github.com/BuilderIO/builder-agent-skills` into `.builder/skills/<skill-name>`.
 
+You can use `--source` or the environment variable `BUILDER_SKILLS_SOURCE` to override the source of skills/plugins.
+
 ```bash
 npx builder-doctor install-skill skill-creator
 ```
