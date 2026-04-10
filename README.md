@@ -124,9 +124,10 @@ You can use `--source` or the environment variable `BUILDER_SKILLS_SOURCE` to ov
 
 ```bash
 npx builder-doctor install-skill skill-creator
+npx builder-doctor install-skill skill-a skill-b
 ```
 
-If files already exist for that skill, they are overwritten.
+If files already exist for that skill, they are overwritten. Multiple skills can be installed at once.
 
 ### skills
 
