@@ -7,7 +7,8 @@ import * as tar from "tar";
 import { safeFetch } from "./fetch";
 
 const DEFAULT_SKILLS_SOURCE = "BuilderIO/builder-agent-skills";
-const DEFAULT_PLUGINS_SOURCE = "BuilderIO/builder-agent-skills";
+const DEFAULT_PLUGINS_SOURCE = "BuilderIO/builder-agent-plugins";
+const SOURCE_ENV_VAR = "BUILDER_SKILLS_SOURCE";
 const GITHUB_TARBALL_BASE_URL = "https://codeload.github.com";
 
 export interface InstallSkillOptions {
@@ -22,16 +23,16 @@ export interface InstallPluginOptions {
   verbose?: boolean;
 }
 
+export interface ListSkillsOptions {
+  source?: string;
+  verbose?: boolean;
+}
+
 export async function runInstallSkill(
   options: InstallSkillOptions
 ): Promise<void> {
   const { skillName, source, verbose = false } = options;
   const sourceRepo = resolveSourceRepository(source);
-
-  if (skillName === "skills") {
-    await runListSkills({ sourceRepo, verbose });
-    return;
-  }
 
   validateInstallItemName(skillName, "skill");
 
@@ -74,11 +75,6 @@ export async function runInstallPlugin(
   });
 }
 
-interface ListSkillsOptions {
-  sourceRepo: string;
-  verbose: boolean;
-}
-
 interface InstallFromTarballOptions {
   itemType: "Skill" | "Plugin";
   itemName: string;
@@ -91,8 +87,11 @@ interface InstallFromTarballOptions {
   verbose: boolean;
 }
 
-async function runListSkills(options: ListSkillsOptions): Promise<void> {
-  const { sourceRepo, verbose } = options;
+export async function runListSkills(
+  options: ListSkillsOptions
+): Promise<void> {
+  const { source, verbose = false } = options;
+  const sourceRepo = resolveSourceRepository(source);
   const tarballUrl = createTarballUrl(sourceRepo);
 
   if (verbose) {
@@ -106,7 +105,8 @@ async function runListSkills(options: ListSkillsOptions): Promise<void> {
     );
   }
 
-  const skillsWithSkillFile = new Set<string>();
+  const skills = new Map<string, string>();
+  const skillReadTasks: Array<Promise<void>> = [];
 
   await pipeline(
     Readable.from(Buffer.from(await response.arrayBuffer())),
@@ -118,21 +118,40 @@ async function runListSkills(options: ListSkillsOptions): Promise<void> {
         assertSafeArchivePath(entryPath);
 
         const match = entryPath.match(/^[^/]+\/([^/]+)\/SKILL\.md$/);
-        if (match) {
-          skillsWithSkillFile.add(match[1]);
+        if (!match) {
+          return;
         }
+
+        const skillName = match[1];
+        const readTask = readEntryToString(entry).then((content) => {
+          skills.set(skillName, extractSkillDescription(content));
+        });
+        skillReadTasks.push(readTask);
       },
     })
   );
 
-  const sortedSkills = Array.from(skillsWithSkillFile).sort();
+  await Promise.all(skillReadTasks);
+
+  const sortedSkills = Array.from(skills.entries()).sort(([skillA], [skillB]) =>
+    skillA.localeCompare(skillB)
+  );
 
   if (sortedSkills.length === 0) {
     console.log("No skills were found.");
     return;
   }
 
-  console.log(sortedSkills.join("\n"));
+  const defaultSource = sourceRepo === resolveSourceRepository(undefined);
+  const formattedSkills = sortedSkills.map(([skillName, description]) => {
+    const installCommand = defaultSource
+      ? `npx builder-doctor install-skill ${skillName}`
+      : `npx builder-doctor install-skill ${skillName} --source ${sourceRepo}`;
+
+    return [skillName, "=========", description, installCommand].join("\n");
+  });
+
+  console.log(formattedSkills.join("\n\n"));
 }
 
 async function runInstallFromTarball(
@@ -225,21 +244,61 @@ function assertSafeArchivePath(entryPath: string): void {
   }
 }
 
+async function readEntryToString(
+  entry: AsyncIterable<string | Buffer> & {
+    setEncoding?: (encoding: BufferEncoding) => void;
+  }
+): Promise<string> {
+  const chunks: string[] = [];
+  entry.setEncoding?.("utf8");
+
+  for await (const chunk of entry) {
+    chunks.push(typeof chunk === "string" ? chunk : chunk.toString("utf8"));
+  }
+
+  return chunks.join("");
+}
+
+function extractSkillDescription(content: string): string {
+  const frontMatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (frontMatterMatch) {
+    const descriptionLine = frontMatterMatch[1].match(/^description:\s*(.+)$/m);
+    if (descriptionLine) {
+      return descriptionLine[1].trim().replace(/^['"]|['"]$/g, "");
+    }
+  }
+
+  const contentWithoutFrontMatter = content.replace(
+    /^---\r?\n[\s\S]*?\r?\n---\r?\n?/,
+    ""
+  );
+
+  const descriptionLine = contentWithoutFrontMatter
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith("#") && !line.startsWith("```"));
+
+  return descriptionLine ?? "No description provided.";
+}
+
 function resolveSourceRepository(
   source: string | undefined,
   fallback = DEFAULT_SKILLS_SOURCE
 ): string {
-  if (!source) {
-    return fallback;
-  }
+  const envSource = process.env[SOURCE_ENV_VAR];
+  const resolvedSource = source ?? envSource ?? fallback;
 
+  validateSourceRepository(resolvedSource, source ? "--source" : envSource ? SOURCE_ENV_VAR : "default source");
+
+  return resolvedSource;
+}
+
+function validateSourceRepository(source: string, sourceLabel: string): void {
   if (!/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/.test(source)) {
     throw new Error(
-      "Invalid source format. Use GitHub owner/repository, for example: BuilderIO/builder-agent-skills"
+      `Invalid source format from ${sourceLabel}. Use GitHub owner/repository, for example: BuilderIO/builder-agent-skills`
     );
   }
-
-  return source;
 }
 
 function createTarballUrl(sourceRepo: string): string {

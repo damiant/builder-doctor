@@ -4,7 +4,7 @@ import { checkRules } from "./rules";
 import { runSetup } from "./setup";
 import { runEnv } from "./env";
 import { runNetwork } from "./network";
-import { runInstallPlugin, runInstallSkill } from "./install";
+import { runInstallPlugin, runInstallSkill, runListSkills } from "./install";
 
 const args = process.argv.slice(2);
 const verbose = args.includes("--verbose");
@@ -18,6 +18,7 @@ const installSkill = args[0] === "install-skill";
 const installSkillName = installSkill ? args[1] : undefined;
 const installPlugin = args[0] === "install-plugin";
 const installPluginName = installPlugin ? args[1] : undefined;
+const skills = args[0] === "skills";
 const source = getOptionValue("--source");
 const all =
   !rules &&
@@ -26,7 +27,8 @@ const all =
   !env &&
   !showHelp &&
   !installSkill &&
-  !installPlugin;
+  !installPlugin &&
+  !skills;
 const nonInteractive = !process.stdin.isTTY || !process.stdout.isTTY;
 const nonInteractiveMessage =
   `Ask the user (using AskUserQuestion) whether they would like to 1. Install the skill creator 2. Install a skill, 3. Install a plugin, 4. Review rules for issues. ` +
@@ -47,12 +49,13 @@ Commands:
   setup       Run Builder.io agent to analyze project and provide setup instructions
   env         Display all environment variables sorted alphabetically
   install-skill <skill-name>    Install a skill from BuilderIO/builder-agent-skills
+  skills                        List available skills
   install-plugin <plugin-name>  Install a plugin from BuilderIO/builder-agent-plugins
   help                           Show this help message
 
 Options:
   --verbose            Show detailed output for each check
-  --source <owner/repo>  Override skill/plugin source repository (GitHub owner/repository)
+  --source <owner/repo>  Override source repository (GitHub owner/repository). Overrides BUILDER_SKILLS_SOURCE
   --help, -h           Show this help message
 
 Examples:
@@ -63,9 +66,11 @@ Examples:
   builder-doctor setup        Get project setup instructions from Builder.io agent
   builder-doctor env          Display environment variables
   builder-doctor install-skill skill-creator                           Install a skill into .builder/skills
-  builder-doctor install-skill skill-creator --source damiant/builder-vpp  Install a skill from a custom source
+  builder-doctor skills                                                 List available skills
+  builder-doctor skills --source myorg/myrepo                    List available skills from a custom source
+  builder-doctor install-skill skill-creator --source myorg/myrepo  Install a skill from a custom source
   builder-doctor install-plugin my-plugin                              Install a plugin into .builder
-  builder-doctor install-plugin my-plugin --source damiant/builder-vpp      Install a plugin from a custom source
+  builder-doctor install-plugin my-plugin --source myorg/myrepo      Install a plugin from a custom source
   builder-doctor --verbose                                             Run rules and network checks with detailed output
 `);
   process.exit(0);
@@ -109,6 +114,13 @@ async function main() {
 
       await runInstallSkill({
         skillName: installSkillName,
+        source,
+        verbose,
+      });
+    }
+
+    if (skills) {
+      await runListSkills({
         source,
         verbose,
       });

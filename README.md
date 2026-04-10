@@ -23,7 +23,8 @@ builder-doctor [options] [commands]
 ### Options
 
 - `--verbose` - Show detailed output for each check
-- `--source <owner/repo>` - Override the install source repository for `install-skill` and `install-plugin`
+- `--source <owner/repo>` - Override the install source repository for `install-skill`, `skills`, and `install-plugin`
+- `BUILDER_SKILLS_SOURCE=<owner/repo>` - Environment variable to set the default source repository (overridden by `--source`)
 - `--help, -h` - Show help message
 
 ### Running Default Checks
@@ -121,20 +122,25 @@ Install a skill from `https://github.com/BuilderIO/builder-agent-skills` into `.
 
 ```bash
 npx builder-doctor install-skill skill-creator
-npx builder-doctor install-skill skill-creator --source damiant/builder-vpp
+npx builder-doctor install-skill skill-creator --source myorg/myrepo
 ```
 
 If files already exist for that skill, they are overwritten.
 
-The optional `--source` flag accepts a GitHub `owner/repository` value and pulls from that repository instead of the default `BuilderIO/builder-agent-skills`.
+The optional `--source` flag accepts a GitHub `owner/repository` value and pulls from that repository.
+
+Default source resolution order is:
+1. `--source`
+2. `BUILDER_SKILLS_SOURCE`
+3. `BuilderIO/builder-agent-skills`
 
 ### skills
 
 List available skills from `https://github.com/BuilderIO/builder-agent-skills`.
 
 ```bash
-npx builder-doctor install-skill skills
-npx builder-doctor install-skill skills --source damiant/builder-vpp
+npx builder-doctor skills
+npx builder-doctor skills --source myorg/myrepo
 ```
 
 Only folders that contain a `SKILL.md` file are included in the output.
@@ -145,12 +151,17 @@ Install a plugin from `https://github.com/BuilderIO/builder-agent-plugins`.
 
 ```bash
 npx builder-doctor install-plugin my-plugin
-npx builder-doctor install-plugin my-plugin --source damiant/builder-vpp
+npx builder-doctor install-plugin my-plugin --source myorg/myrepo
 ```
 
 Plugin contents are extracted into the `.builder` root (for example: `skills`, `agents`, `rules`, etc).
 
-The optional `--source` flag accepts a GitHub `owner/repository` value and pulls from that repository instead of the default `BuilderIO/builder-agent-plugins`.
+The optional `--source` flag accepts a GitHub `owner/repository` value and pulls from that repository.
+
+Default source resolution order is:
+1. `--source`
+2. `BUILDER_SKILLS_SOURCE`
+3. `BuilderIO/builder-agent-plugins`
 
 ## Examples
 
@@ -161,11 +172,12 @@ builder-doctor rules            # Run only rules checks
 builder-doctor setup            # Get project setup instructions
 builder-doctor env              # Display environment variables
 builder-doctor install-skill skill-creator                       # Install a skill into .builder/skills
-builder-doctor install-skill skill-creator --source damiant/builder-vpp  # Install a skill from a custom source
-builder-doctor install-skill skills                              # List available skills (requires SKILL.md)
-builder-doctor install-skill skills --source damiant/builder-vpp # List available skills from a custom source
+builder-doctor install-skill skill-creator --source myorg/myrepo # Install a skill from a custom source
+builder-doctor skills                                            # List available skills (requires SKILL.md)
+builder-doctor skills --source myorg/myrepo                      # List available skills from a custom source
+BUILDER_SKILLS_SOURCE=myorg/myrepo builder-doctor skills         # Use env var as the default source
 builder-doctor install-plugin my-plugin                          # Install a plugin into .builder
-builder-doctor install-plugin my-plugin --source damiant/builder-vpp      # Install a plugin from a custom source
+builder-doctor install-plugin my-plugin --source myorg/myrepo    # Install a plugin from a custom source
 builder-doctor --verbose                                         # Run all checks with detailed output
 ```
 
