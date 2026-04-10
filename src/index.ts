@@ -35,16 +35,8 @@ const all =
   !installSkill &&
   !installPlugin &&
   !skills;
-const nonInteractive = !process.stdin.isTTY || !process.stdout.isTTY;
-const nonInteractiveMessage =
-  `Ask the user (using AskUserQuestion) whether they would like to 1. Install the skill creator 2. Install a skill, 3. Install a plugin, 4. Review rules for issues. ` +
-  `If 1 is chosen then run npx builder-doctor install-skill skill-creator, ` +
-  `if 2 is chosen then ask the user to enter the skill they would like to install and then run npx builder-doctor install-skill <skill-name>, ` +
-  `if 3 is chosen then ask the user to enter the plugin they would like to install and then run npx builder-doctor install-plugin <plugin-name>, ` +
-  `If 4 is chosen then run npx builder-doctor rules`;
 
-if (showHelp) {
-  console.log(`
+const help = `
 builder-doctor - A CLI tool for Builder.io diagnostics
 
 Usage: builder-doctor [options] [commands]
@@ -79,7 +71,18 @@ Examples:
   builder-doctor install-plugin my-plugin                              Install a plugin into .builder
   builder-doctor install-plugin my-plugin --source myorg/myrepo      Install a plugin from a custom source
   builder-doctor --verbose                                             Run rules and network checks with detailed output
-`);
+`;
+const nonInteractive = !process.stdin.isTTY || !process.stdout.isTTY;
+const nonInteractiveMessage =
+  `Ask the user (using AskUserQuestion) whether they would like to 1. Install the skill creator 2. Install a skill, 3. List installable skills, 4. Review rules for issues.` +
+  `If 1 is chosen then run npx builder-doctor install-skill skill-creator, ` +
+  `if 2 is chosen then ask the user to enter the skill they would like to install and then run npx builder-doctor install-skill <skill-name>, ` +
+  `if 3 is chosen then ask the user to enter the plugin they would like to install and then run npx builder-doctor skills, ` +
+  `If 4 is chosen then run npx builder-doctor rules` +
+  `\n\n${help}`;
+
+if (showHelp) {
+  console.log(help);
   process.exit(0);
 }
 
@@ -165,7 +168,9 @@ function getOptionValue(optionName: string): string | undefined {
 
   const optionValue = args[optionIndex + 1];
   if (!optionValue || optionValue.startsWith("--")) {
-    throw new Error(`Missing value for ${optionName}. Usage: ${optionName} <owner/repo>`);
+    throw new Error(
+      `Missing value for ${optionName}. Usage: ${optionName} <owner/repo>`,
+    );
   }
 
   return optionValue;
