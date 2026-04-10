@@ -15,7 +15,13 @@ const env = args.includes("env");
 const showHelp =
   args.includes("--help") || args.includes("-h") || args.includes("help");
 const installSkill = args[0] === "install-skill";
-const installSkillName = installSkill ? args[1] : undefined;
+const installSkillNames: string[] = [];
+if (installSkill) {
+  for (let i = 1; i < args.length; i++) {
+    if (args[i].startsWith("--")) break;
+    installSkillNames.push(args[i]);
+  }
+}
 const installPlugin = args[0] === "install-plugin";
 const installPluginName = installPlugin ? args[1] : undefined;
 const skills = args[0] === "skills";
@@ -48,7 +54,7 @@ Commands:
   rules       Check Builder.io rules configuration
   setup       Run Builder.io agent to analyze project and provide setup instructions
   env         Display all environment variables sorted alphabetically
-  install-skill <skill-name>    Install a skill from BuilderIO/builder-agent-skills
+  install-skill <skill-name...>  Install one or more skills from BuilderIO/builder-agent-skills
   skills                        List available skills
   install-plugin <plugin-name>  Install a plugin from BuilderIO/builder-agent-plugins
   help                           Show this help message
@@ -66,6 +72,7 @@ Examples:
   builder-doctor setup        Get project setup instructions from Builder.io agent
   builder-doctor env          Display environment variables
   builder-doctor install-skill skill-creator                           Install a skill into .builder/skills
+  builder-doctor install-skill skill-a skill-b                         Install multiple skills at once
   builder-doctor skills                                                 List available skills
   builder-doctor skills --source myorg/myrepo                    List available skills from a custom source
   builder-doctor install-skill skill-creator --source myorg/myrepo  Install a skill from a custom source
@@ -105,18 +112,20 @@ async function main() {
     }
 
     if (installSkill) {
-      if (!installSkillName) {
+      if (installSkillNames.length === 0) {
         console.error(
-          "Missing skill name. Usage: builder-doctor install-skill <skill-name>",
+          "Missing skill name. Usage: builder-doctor install-skill <skill-name...>",
         );
         process.exit(1);
       }
 
-      await runInstallSkill({
-        skillName: installSkillName,
-        source,
-        verbose,
-      });
+      for (const skillName of installSkillNames) {
+        await runInstallSkill({
+          skillName,
+          source,
+          verbose,
+        });
+      }
     }
 
     if (skills) {

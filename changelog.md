@@ -1,3 +1,6 @@
+1.0.17
+- install-skill command now supports installing multiple skills in one invocation (e.g. `npx builder-doctor install-skill skill-a skill-b`)
+
 1.0.11
 - Updated check for cdn.builder.io
 
