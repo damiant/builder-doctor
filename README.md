@@ -122,17 +122,9 @@ Install a skill from `https://github.com/BuilderIO/builder-agent-skills` into `.
 
 ```bash
 npx builder-doctor install-skill skill-creator
-npx builder-doctor install-skill skill-creator --source myorg/myrepo
 ```
 
 If files already exist for that skill, they are overwritten.
-
-The optional `--source` flag accepts a GitHub `owner/repository` value and pulls from that repository.
-
-Default source resolution order is:
-1. `--source`
-2. `BUILDER_SKILLS_SOURCE`
-3. `BuilderIO/builder-agent-skills`
 
 ### skills
 
@@ -140,7 +132,6 @@ List available skills from `https://github.com/BuilderIO/builder-agent-skills`.
 
 ```bash
 npx builder-doctor skills
-npx builder-doctor skills --source myorg/myrepo
 ```
 
 Only folders that contain a `SKILL.md` file are included in the output.
@@ -151,17 +142,9 @@ Install a plugin from `https://github.com/BuilderIO/builder-agent-plugins`.
 
 ```bash
 npx builder-doctor install-plugin my-plugin
-npx builder-doctor install-plugin my-plugin --source myorg/myrepo
 ```
 
 Plugin contents are extracted into the `.builder` root (for example: `skills`, `agents`, `rules`, etc).
-
-The optional `--source` flag accepts a GitHub `owner/repository` value and pulls from that repository.
-
-Default source resolution order is:
-1. `--source`
-2. `BUILDER_SKILLS_SOURCE`
-3. `BuilderIO/builder-agent-plugins`
 
 ## Examples
 
@@ -180,4 +163,3 @@ builder-doctor install-plugin my-plugin                          # Install a plu
 builder-doctor install-plugin my-plugin --source myorg/myrepo    # Install a plugin from a custom source
 builder-doctor --verbose                                         # Run all checks with detailed output
 ```
-
