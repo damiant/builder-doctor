@@ -24,6 +24,7 @@ builder-doctor [options] [commands]
 
 - `--verbose` - Show detailed output for each check
 - `--source <owner/repo>` - Override the install source repository for `install-skill`, `skills`, and `install-plugin`
+- `--agent <name>` - Set the target agent folder for `install-skill` (e.g. `github` -> `.github`, `claude` -> `.claude`). Defaults to `.builder`
 - `BUILDER_SKILLS_SOURCE=<owner/repo>` - Environment variable to set the default source repository (overridden by `--source`)
 - `--help, -h` - Show help message
 
@@ -122,9 +123,13 @@ Install a skill from `https://github.com/BuilderIO/builder-agent-skills` into `.
 
 You can use `--source` or the environment variable `BUILDER_SKILLS_SOURCE` to override the source of skills/plugins.
 
+Use `--agent <name>` to install into a different agent folder (e.g. `.github`, `.claude`, `.cursor`) instead of the default `.builder`.
+
 ```bash
 npx builder-doctor install-skill skill-creator
 npx builder-doctor install-skill skill-a skill-b
+npx builder-doctor install-skill skill-creator --agent github   # installs to .github/skills/skill-creator
+npx builder-doctor install-skill skill-creator --agent claude   # installs to .claude/skills/skill-creator
 ```
 
 If files already exist for that skill, they are overwritten. Multiple skills can be installed at once.
@@ -158,6 +163,8 @@ builder-doctor rules            # Run only rules checks
 builder-doctor setup            # Get project setup instructions
 builder-doctor env              # Display environment variables
 builder-doctor install-skill skill-creator                       # Install a skill into .builder/skills
+builder-doctor install-skill skill-creator --agent github         # Install a skill into .github/skills
+builder-doctor install-skill skill-creator --agent claude         # Install a skill into .claude/skills
 builder-doctor install-skill skill-creator --source myorg/myrepo # Install a skill from a custom source
 builder-doctor skills                                            # List available skills (requires SKILL.md)
 builder-doctor skills --source myorg/myrepo                      # List available skills from a custom source

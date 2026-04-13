@@ -26,6 +26,7 @@ const installPlugin = args[0] === "install-plugin";
 const installPluginName = installPlugin ? args[1] : undefined;
 const skills = args[0] === "skills";
 const source = getOptionValue("--source");
+const agent = getOptionValue("--agent");
 const all =
   !rules &&
   !network &&
@@ -47,6 +48,7 @@ Commands:
   setup       Run Builder.io agent to analyze project and provide setup instructions
   env         Display all environment variables sorted alphabetically
   install-skill <skill-name...>  Install one or more skills from BuilderIO/builder-agent-skills
+                                   Use --agent <name> to change the install folder (e.g. github, claude, cursor)
   skills                        List available skills
   install-plugin <plugin-name>  Install a plugin from BuilderIO/builder-agent-plugins
   help                           Show this help message
@@ -54,6 +56,7 @@ Commands:
 Options:
   --verbose            Show detailed output for each check
   --source <owner/repo>  Override source repository (GitHub owner/repository). Overrides BUILDER_SKILLS_SOURCE
+  --agent <name>         Set the target agent folder (e.g. github -> .github, claude -> .claude). Default: .builder
   --help, -h           Show this help message
 
 Examples:
@@ -64,6 +67,7 @@ Examples:
   builder-doctor setup        Get project setup instructions from Builder.io agent
   builder-doctor env          Display environment variables
   builder-doctor install-skill skill-creator                           Install a skill into .builder/skills
+  builder-doctor install-skill skill-creator --agent github             Install a skill into .github/skills
   builder-doctor install-skill skill-a skill-b                         Install multiple skills at once
   builder-doctor skills                                                 List available skills
   builder-doctor skills --source myorg/myrepo                    List available skills from a custom source
@@ -126,6 +130,7 @@ async function main() {
         await runInstallSkill({
           skillName,
           source,
+          agent,
           verbose,
         });
       }
