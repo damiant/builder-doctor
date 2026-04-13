@@ -1,3 +1,6 @@
+1.0.19
+- Added `--agent` option to `install-skill` to control the target folder (e.g. `--agent github` installs to `.github/skills/` instead of `.builder/skills/`)
+
 1.0.17
 - install-skill command now supports installing multiple skills in one invocation (e.g. `npx builder-doctor install-skill skill-a skill-b`)
 

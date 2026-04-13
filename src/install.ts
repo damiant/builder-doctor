@@ -14,6 +14,7 @@ const GITHUB_TARBALL_BASE_URL = "https://codeload.github.com";
 export interface InstallSkillOptions {
   skillName: string;
   source?: string;
+  agent?: string;
   verbose?: boolean;
 }
 
@@ -31,13 +32,14 @@ export interface ListSkillsOptions {
 export async function runInstallSkill(
   options: InstallSkillOptions
 ): Promise<void> {
-  const { skillName, source, verbose = false } = options;
+  const { skillName, source, agent, verbose = false } = options;
   const sourceRepo = resolveSourceRepository(source);
 
   validateInstallItemName(skillName, "skill");
 
+  const agentFolder = agent ? `.${agent}` : ".builder";
   const escapedSkillName = escapeRegExp(skillName);
-  const destinationPath = path.join(".builder", "skills", skillName);
+  const destinationPath = path.join(agentFolder, "skills", skillName);
 
   await runInstallFromTarball({
     itemType: "Skill",
