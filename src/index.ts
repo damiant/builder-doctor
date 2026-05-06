@@ -5,9 +5,17 @@ import { runSetup } from "./setup";
 import { runEnv } from "./env";
 import { runNetwork } from "./network";
 import { runInstallPlugin, runInstallSkill, runListSkills } from "./install";
+import { formatTlsCertErrorMessage, getTlsCertErrorCode } from "./fetch";
 
 const args = process.argv.slice(2);
 const verbose = args.includes("--verbose");
+const acceptSelfSigned = args.includes("--acceptSelfSigned");
+if (acceptSelfSigned) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  console.warn(
+    "Warning: --acceptSelfSigned is set. TLS certificate verification is disabled for this run; only use on trusted networks."
+  );
+}
 const rules = args.includes("rules");
 const network = args.includes("network");
 const setup = args.includes("setup");
@@ -57,6 +65,7 @@ Options:
   --verbose            Show detailed output for each check
   --source <owner/repo>  Override source repository (GitHub owner/repository). Overrides BUILDER_SKILLS_SOURCE
   --agent <name>         Set the target agent folder (e.g. github -> .github, claude -> .claude). Default: .builder
+  --acceptSelfSigned   Trust self-signed / untrusted TLS certificates for this run (insecure; only use on trusted networks)
   --help, -h           Show this help message
 
 Examples:
@@ -158,7 +167,15 @@ async function main() {
       });
     }
   } catch (error) {
-    console.error("An error occurred:", error);
+    const tlsErrorCode = getTlsCertErrorCode(error);
+    if (tlsErrorCode) {
+      console.error(formatTlsCertErrorMessage(tlsErrorCode));
+      if (verbose) {
+        console.error("\nOriginal error:", error);
+      }
+    } else {
+      console.error("An error occurred:", error);
+    }
     process.exit(1);
   }
 }
