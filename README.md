@@ -154,6 +154,36 @@ npx builder-doctor install-plugin my-plugin
 
 Plugin contents are extracted into the `.builder` root (for example: `skills`, `agents`, `rules`, etc).
 
+### mcp
+
+Add or remove the Builder MCP server entry in an agent's MCP configuration file.
+
+```bash
+npx builder-doctor mcp add <agent>
+npx builder-doctor mcp remove <agent>
+```
+
+Supported agents and the file each one writes to:
+
+| Agent        | File                                  |
+| ------------ | ------------------------------------- |
+| `claude`     | `~/.claude/settings.local.json`       |
+| `cursor`     | `~/.cursor/mcp.json`                  |
+| `copilot`    | `.vscode/mcp.json` (project-local)    |
+| `code_puppy` | `~/.code_puppy/mcp_servers.json`      |
+| _(omitted)_  | `mcp.json` (project-local)            |
+
+`add` creates the file (and any missing parent directories) if it doesn't exist, and merges the `builder-mcp` entry into it without disturbing other settings. `remove` deletes only the `builder-mcp` entry.
+
+```bash
+npx builder-doctor mcp add claude        # ~/.claude/settings.local.json
+npx builder-doctor mcp add cursor        # ~/.cursor/mcp.json
+npx builder-doctor mcp add copilot       # .vscode/mcp.json
+npx builder-doctor mcp add code_puppy    # ~/.code_puppy/mcp_servers.json
+npx builder-doctor mcp add               # ./mcp.json
+npx builder-doctor mcp remove claude     # remove from Claude
+```
+
 ## Examples
 
 ```bash
@@ -171,5 +201,11 @@ builder-doctor skills --source myorg/myrepo                      # List availabl
 BUILDER_SKILLS_SOURCE=myorg/myrepo builder-doctor skills         # Use env var as the default source
 builder-doctor install-plugin my-plugin                          # Install a plugin into .builder
 builder-doctor install-plugin my-plugin --source myorg/myrepo    # Install a plugin from a custom source
+builder-doctor mcp add claude                                    # Add Builder MCP entry to ~/.claude/settings.local.json
+builder-doctor mcp add cursor                                    # Add Builder MCP entry to ~/.cursor/mcp.json
+builder-doctor mcp add copilot                                   # Add Builder MCP entry to .vscode/mcp.json
+builder-doctor mcp add code_puppy                                # Add Builder MCP entry to ~/.code_puppy/mcp_servers.json
+builder-doctor mcp add                                           # Create or update a local mcp.json
+builder-doctor mcp remove claude                                 # Remove the Builder MCP entry for Claude
 builder-doctor --verbose                                         # Run all checks with detailed output
 ```

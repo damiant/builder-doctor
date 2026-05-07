@@ -5,6 +5,7 @@ import { runSetup } from "./setup";
 import { runEnv } from "./env";
 import { runNetwork } from "./network";
 import { runInstallPlugin, runInstallSkill, runListSkills } from "./install";
+import { runMcp, McpAction } from "./mcp";
 import { formatTlsCertErrorMessage, getTlsCertErrorCode } from "./fetch";
 
 const args = process.argv.slice(2);
@@ -33,6 +34,9 @@ if (installSkill) {
 const installPlugin = args[0] === "install-plugin";
 const installPluginName = installPlugin ? args[1] : undefined;
 const skills = args[0] === "skills";
+const mcp = args[0] === "mcp";
+const mcpActionRaw = mcp ? args[1] : undefined;
+const mcpAgent = mcp && args[2] && !args[2].startsWith("--") ? args[2] : undefined;
 const source = getOptionValue("--source");
 const agent = getOptionValue("--agent");
 const all =
@@ -43,7 +47,8 @@ const all =
   !showHelp &&
   !installSkill &&
   !installPlugin &&
-  !skills;
+  !skills &&
+  !mcp;
 
 const help = `
 builder-doctor - A CLI tool for Builder.io diagnostics
@@ -59,6 +64,8 @@ Commands:
                                    Use --agent <name> to change the install folder (e.g. github, claude, cursor)
   skills                        List available skills
   install-plugin <plugin-name>  Install a plugin from BuilderIO/builder-agent-plugins
+  mcp <add|remove> [agent]       Add or remove the Builder MCP server entry
+                                   Agents: claude, cursor, copilot, code_puppy. Omit agent to write a local mcp.json.
   help                           Show this help message
 
 Options:
@@ -83,6 +90,12 @@ Examples:
   builder-doctor install-skill skill-creator --source myorg/myrepo  Install a skill from a custom source
   builder-doctor install-plugin my-plugin                              Install a plugin into .builder
   builder-doctor install-plugin my-plugin --source myorg/myrepo      Install a plugin from a custom source
+  builder-doctor mcp add claude                                        Add Builder MCP entry to ~/.claude/settings.local.json
+  builder-doctor mcp add cursor                                        Add Builder MCP entry to ~/.cursor/mcp.json
+  builder-doctor mcp add copilot                                       Add Builder MCP entry to .vscode/mcp.json
+  builder-doctor mcp add code_puppy                                    Add Builder MCP entry to ~/.code_puppy/mcp_servers.json
+  builder-doctor mcp add                                               Create or update a local mcp.json
+  builder-doctor mcp remove claude                                     Remove the Builder MCP entry for Claude
   builder-doctor --verbose                                             Run rules and network checks with detailed output
 `;
 const nonInteractive = !process.stdin.isTTY || !process.stdout.isTTY;
@@ -163,6 +176,21 @@ async function main() {
       await runInstallPlugin({
         pluginName: installPluginName,
         source,
+        verbose,
+      });
+    }
+
+    if (mcp) {
+      if (mcpActionRaw !== "add" && mcpActionRaw !== "remove") {
+        console.error(
+          "Invalid MCP action. Usage: builder-doctor mcp <add|remove> [agent]",
+        );
+        process.exit(1);
+      }
+
+      await runMcp({
+        action: mcpActionRaw as McpAction,
+        agent: mcpAgent,
         verbose,
       });
     }
