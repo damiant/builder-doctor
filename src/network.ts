@@ -97,11 +97,18 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
 
   await check({
     host: "builderio.xyz",
-    url: "https://builderio.xyz/",
+    url: "https://abc.builderio.xyz/",
     verbose,
     expectedStatus: 404,
-    message: " (Cloud Containers)"
+    message: " (Deprecated Cloud Containers)"
   });
+    await check({
+      host: "builderio.dev",
+      url: "https://abc.builderio.dev/",
+      verbose,
+      expectedStatus: 404,
+      message: " (Cloud Containers)",
+    });
 
   await check({
     host: "34.136.119.149",
@@ -169,15 +176,30 @@ async function check(options: CheckOptions): Promise<void> {
       console.log(`${green}✓${reset} ${options.host}${options.message ?? ""}`);
     }
   } catch (err) {
-    let msg = `${err}`;
-    // Eg turn off Wifi
-    if (msg.includes(`Error: getaddrinfo`)) {
+    // Undici wraps the real failure as `err.cause` — stringifying the outer
+    // "TypeError: fetch failed" hides it. Walk the chain to surface the
+    // deepest message + code (e.g. ENOTFOUND, ECONNRESET, EPROTO).
+    let current: unknown = err;
+    let deepestMessage = `${err}`;
+    let deepestCode: string | undefined;
+    for (let i = 0; i < 8 && current; i += 1) {
+      const m = (current as { message?: unknown }).message;
+      if (typeof m === "string" && m) deepestMessage = m;
+      const c = (current as { code?: unknown }).code;
+      if (typeof c === "string" && c) deepestCode = c;
+      current = (current as { cause?: unknown }).cause;
+    }
+
+    // Eg turn off Wifi, or domain doesn't resolve at all
+    if (deepestCode === "ENOTFOUND" || deepestMessage.includes("getaddrinfo")) {
       result.reason = `You may not have internet connectivity or the domain ${options.host} is not accessible.`;
     }
 
     // Not a known error then report back the actual error
     if (result.reason == "") {
-      result.reason = msg;
+      result.reason = deepestCode
+        ? `${deepestMessage} (${deepestCode})`
+        : deepestMessage;
     }
   }
   if (result.reason !== "") {

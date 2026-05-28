@@ -171,7 +171,7 @@ Supported agents and the file each one writes to:
 | `cursor`     | `~/.cursor/mcp.json`                  |
 | `copilot`    | `.vscode/mcp.json` (project-local)    |
 | `code_puppy` | `~/.code_puppy/mcp_servers.json`      |
-| _(omitted)_  | `mcp.json` (project-local)            |
+| `_(omitted)_`  | `mcp.json` (project-local)            |
 
 `add` creates the file (and any missing parent directories) if it doesn't exist, and merges the `builder-mcp` entry into it without disturbing other settings. `remove` deletes only the `builder-mcp` entry.
 
