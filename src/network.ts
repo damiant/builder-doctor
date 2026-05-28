@@ -97,16 +97,16 @@ export async function runNetwork(options: NetworkOptions): Promise<void> {
 
   await check({
     host: "builderio.xyz",
-    url: "https://abc.builderio.xyz/",
+    url: "https://health.builderio.xyz/health",
     verbose,
-    expectedStatus: 404,
-    message: " (Deprecated Cloud Containers)"
+    expectedStatus: 200,
+    message: " (Deprecated Cloud Containers)",
   });
     await check({
       host: "builderio.dev",
-      url: "https://abc.builderio.dev/",
+      url: "https://health.builderio.dev/health",
       verbose,
-      expectedStatus: 404,
+      expectedStatus: 200,
       message: " (Cloud Containers)",
     });
 
