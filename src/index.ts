@@ -65,7 +65,7 @@ Commands:
   skills                        List available skills
   install-plugin <plugin-name>  Install a plugin from BuilderIO/builder-agent-plugins
   mcp <add|remove> [agent]       Add or remove the Builder MCP server entry
-                                   Agents: claude, cursor, copilot, code_puppy. Omit agent to write a local mcp.json.
+                                   Agents: claude, cursor, copilot, code_puppy, wibey. Omit agent to write a local mcp.json.
   help                           Show this help message
 
 Options:
@@ -94,6 +94,7 @@ Examples:
   builder-doctor mcp add cursor                                        Add Builder MCP entry to ~/.cursor/mcp.json
   builder-doctor mcp add copilot                                       Add Builder MCP entry to .vscode/mcp.json
   builder-doctor mcp add code_puppy                                    Add Builder MCP entry to ~/.code_puppy/mcp_servers.json
+  builder-doctor mcp add wibey                                         Add Builder MCP entry to ~/.wibey/mcp.json and ~/.vscode/mcp.json
   builder-doctor mcp add                                               Create or update a local mcp.json
   builder-doctor mcp remove claude                                     Remove the Builder MCP entry for Claude
   builder-doctor --verbose                                             Run rules and network checks with detailed output

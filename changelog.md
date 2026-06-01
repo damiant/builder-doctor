@@ -1,3 +1,6 @@
+1.0.24
+- Add Wibey mcp and auth check
+
 1.0.21
 - Added `mcp` command to add or remove the Builder MCP server entry in an agent's MCP configuration file. Supported agents: `claude` (`~/.claude/settings.local.json`), `cursor` (`~/.cursor/mcp.json`), `copilot` (`.vscode/mcp.json`), `code_puppy` (`~/.code_puppy/mcp_servers.json`), or omit the agent to write a local `mcp.json`.
 

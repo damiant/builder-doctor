@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { promptForAuth } from "./auth";
 
 export type McpAction = "add" | "remove";
 
@@ -24,79 +25,110 @@ interface McpTarget {
 export async function runMcp(options: McpOptions): Promise<void> {
   const { action, agent, verbose = false } = options;
 
-  const target = resolveTarget(agent);
+  const targets = resolveTargets(agent);
 
-  if (verbose) {
-    console.log(
-      `${action === "add" ? "Adding" : "Removing"} ${SERVER_KEY} ${
-        action === "add" ? "to" : "from"
-      } ${target.filePath}`
-    );
+  for (const target of targets) {
+    if (verbose) {
+      console.log(
+        `${action === "add" ? "Adding" : "Removing"} ${SERVER_KEY} ${
+          action === "add" ? "to" : "from"
+        } ${target.filePath}`
+      );
+    }
+
+    if (action === "add") {
+      addServer(target);
+    } else {
+      removeServer(target);
+    }
   }
 
   if (action === "add") {
-    addServer(target);
-  } else {
-    removeServer(target);
+    await promptForAuth(verbose);
   }
 }
 
-function resolveTarget(agent: string | undefined): McpTarget {
+function resolveTargets(agent: string | undefined): McpTarget[] {
   const standardEntry = {
     command: SERVER_COMMAND,
     args: [...SERVER_ARGS],
   };
 
+  const stdioEntry = {
+    type: "stdio",
+    command: SERVER_COMMAND,
+    args: [...SERVER_ARGS],
+  };
+
   if (!agent) {
-    return {
-      agentLabel: "local",
-      filePath: path.join(process.cwd(), "mcp.json"),
-      containerKey: "mcpServers",
-      serverEntry: standardEntry,
-    };
+    return [
+      {
+        agentLabel: "local",
+        filePath: path.join(process.cwd(), "mcp.json"),
+        containerKey: "mcpServers",
+        serverEntry: standardEntry,
+      },
+    ];
   }
 
   switch (agent) {
     case "claude":
-      return {
-        agentLabel: "Claude",
-        filePath: path.join(homedir(), ".claude", "settings.local.json"),
-        containerKey: "mcpServers",
-        serverEntry: standardEntry,
-      };
+      return [
+        {
+          agentLabel: "Claude",
+          filePath: path.join(homedir(), ".claude", "settings.local.json"),
+          containerKey: "mcpServers",
+          serverEntry: standardEntry,
+        },
+      ];
     case "cursor":
-      return {
-        agentLabel: "Cursor",
-        filePath: path.join(homedir(), ".cursor", "mcp.json"),
-        containerKey: "mcpServers",
-        serverEntry: standardEntry,
-      };
+      return [
+        {
+          agentLabel: "Cursor",
+          filePath: path.join(homedir(), ".cursor", "mcp.json"),
+          containerKey: "mcpServers",
+          serverEntry: standardEntry,
+        },
+      ];
     case "copilot":
-      return {
-        agentLabel: "Copilot",
-        filePath: path.join(process.cwd(), ".vscode", "mcp.json"),
-        containerKey: "servers",
-        serverEntry: {
-          type: "stdio",
-          command: SERVER_COMMAND,
-          args: [...SERVER_ARGS],
+      return [
+        {
+          agentLabel: "Copilot",
+          filePath: path.join(process.cwd(), ".vscode", "mcp.json"),
+          containerKey: "servers",
+          serverEntry: { ...stdioEntry },
         },
-      };
+      ];
     case "code_puppy":
-      return {
-        agentLabel: "Code Puppy",
-        filePath: path.join(homedir(), ".code_puppy", "mcp_servers.json"),
-        containerKey: "mcp_servers",
-        serverEntry: {
-          type: "stdio",
-          command: SERVER_COMMAND,
-          args: [...SERVER_ARGS],
-          enabled: true,
+      return [
+        {
+          agentLabel: "Code Puppy",
+          filePath: path.join(homedir(), ".code_puppy", "mcp_servers.json"),
+          containerKey: "mcp_servers",
+          serverEntry: {
+            ...stdioEntry,
+            enabled: true,
+          },
         },
-      };
+      ];
+    case "wibey":
+      return [
+        {
+          agentLabel: "Wibey",
+          filePath: path.join(homedir(), ".wibey", "mcp.json"),
+          containerKey: "servers",
+          serverEntry: { ...stdioEntry },
+        },
+        {
+          agentLabel: "Wibey",
+          filePath: path.join(homedir(), ".vscode", "mcp.json"),
+          containerKey: "servers",
+          serverEntry: { ...stdioEntry },
+        },
+      ];
     default:
       throw new Error(
-        `Unknown MCP agent "${agent}". Supported: claude, cursor, copilot, code_puppy, or omit for a local mcp.json.`
+        `Unknown MCP agent "${agent}". Supported: claude, cursor, copilot, code_puppy, wibey, or omit for a local mcp.json.`
       );
   }
 }

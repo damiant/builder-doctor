@@ -1,6 +1,6 @@
 {
   "name": "builder-doctor",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "A CLI tool for Builder.io utilities",
   "main": "dist/index.js",
   "bin": {
