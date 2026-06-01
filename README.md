@@ -176,6 +176,8 @@ Supported agents and the file each one writes to:
 
 `add` creates the file (and any missing parent directories) if it doesn't exist, and merges the `builder-mcp` entry into it without disturbing other settings. `remove` deletes only the `builder-mcp` entry.
 
+After an `add`, your Builder.io authentication is checked by running `npx --yes "@builder.io/dev-tools@latest" auth status` (logged as `Checking Builder.io Authentication....`). If you're already authenticated it logs `Builder.io authenticated.` along with the status details and continues. Otherwise you are prompted `Authenticate with Builder.io? (Y/n)`, and unless you answer `n` it runs `npx --yes "@builder.io/dev-tools@latest" auth` to sign in. The check and prompt are skipped when not running in an interactive terminal.
+
 ```bash
 npx builder-doctor mcp add claude        # ~/.claude/settings.local.json
 npx builder-doctor mcp add cursor        # ~/.cursor/mcp.json

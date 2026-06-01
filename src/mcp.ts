@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import { promptForAuth } from "./auth";
 
 export type McpAction = "add" | "remove";
 
@@ -40,6 +41,10 @@ export async function runMcp(options: McpOptions): Promise<void> {
     } else {
       removeServer(target);
     }
+  }
+
+  if (action === "add") {
+    await promptForAuth(verbose);
   }
 }
 
