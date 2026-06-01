@@ -171,6 +171,7 @@ Supported agents and the file each one writes to:
 | `cursor`     | `~/.cursor/mcp.json`                  |
 | `copilot`    | `.vscode/mcp.json` (project-local)    |
 | `code_puppy` | `~/.code_puppy/mcp_servers.json`      |
+| `wibey`      | `~/.wibey/mcp.json` and `~/.vscode/mcp.json` |
 | `_(omitted)_`  | `mcp.json` (project-local)            |
 
 `add` creates the file (and any missing parent directories) if it doesn't exist, and merges the `builder-mcp` entry into it without disturbing other settings. `remove` deletes only the `builder-mcp` entry.
@@ -180,6 +181,7 @@ npx builder-doctor mcp add claude        # ~/.claude/settings.local.json
 npx builder-doctor mcp add cursor        # ~/.cursor/mcp.json
 npx builder-doctor mcp add copilot       # .vscode/mcp.json
 npx builder-doctor mcp add code_puppy    # ~/.code_puppy/mcp_servers.json
+npx builder-doctor mcp add wibey         # ~/.wibey/mcp.json and ~/.vscode/mcp.json
 npx builder-doctor mcp add               # ./mcp.json
 npx builder-doctor mcp remove claude     # remove from Claude
 ```
@@ -205,6 +207,7 @@ builder-doctor mcp add claude                                    # Add Builder M
 builder-doctor mcp add cursor                                    # Add Builder MCP entry to ~/.cursor/mcp.json
 builder-doctor mcp add copilot                                   # Add Builder MCP entry to .vscode/mcp.json
 builder-doctor mcp add code_puppy                                # Add Builder MCP entry to ~/.code_puppy/mcp_servers.json
+builder-doctor mcp add wibey                                     # Add Builder MCP entry to ~/.wibey/mcp.json and ~/.vscode/mcp.json
 builder-doctor mcp add                                           # Create or update a local mcp.json
 builder-doctor mcp remove claude                                 # Remove the Builder MCP entry for Claude
 builder-doctor --verbose                                         # Run all checks with detailed output
