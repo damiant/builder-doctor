@@ -13,7 +13,7 @@ export interface McpOptions {
 
 const SERVER_KEY = "builder-mcp";
 const SERVER_COMMAND = "npx";
-const SERVER_ARGS = ["@builder.io/dev-tools@latest", "mcp"];
+const SERVER_ARGS = ["@builder.io/dev-tools@latest", "mcp", "--acceptSelfSigned"];
 
 interface McpTarget {
   agentLabel: string;

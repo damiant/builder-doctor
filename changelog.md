@@ -1,3 +1,6 @@
+1.0.25
+- Include --acceptSelfSigned for mcp add operations
+
 1.0.24
 - Add Wibey mcp and auth check
 
